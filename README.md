@@ -33,15 +33,12 @@ Because of this it may work differently with different themes, corner radiuses o
 Thanks to recent changes the performance of this plugin has improved. But depending on your hardware, you still can have performance hit. Or you can try and test the new upcoming version wich has almost no performance impact.
 
 
-# Try upcoming version
-If you use Plasma 5.25 and your GPU supports OpenGL 3.1, you can try the upcoming version 2.0 from the [branch v2.0](https://github.com/a-parhom/LightlyShaders/tree/v2.0).
+# Try version 2.0
+If you use Plasma 5.25 and your GPU supports OpenGL 3.1, you should use the version 2.0 from the [master branch](https://github.com/a-parhom/LightlyShaders).
 
 It is fully compatible with stock Plasma effects, including Wobbly windows, and has no performance impact.
 
 You will have to use it together with window decorations that deal with "korner bug", I recommend **SierraBreezeEnhanced**.
-
-## Caution!
-It is a work-in-progress branch! Things may break!
 
 
 # Dependencies:
@@ -69,7 +66,9 @@ sudo zypper install git cmake gcc-c++ extra-cmake-modules libqt5-qttools-devel l
 ```
 git clone https://github.com/a-parhom/LightlyShaders
 
-cd LightlyShaders; mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make && sudo make install && (kwin_x11 --replace &)
+cd LightlyShaders; git checkout v1.0;
+
+mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make && sudo make install && (kwin_x11 --replace &)
 ```
 
 ## Note
