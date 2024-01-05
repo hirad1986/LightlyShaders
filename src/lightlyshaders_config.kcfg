@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+    <kcfgfile name="lightlyshaders.conf"/>
+    <group name="General">
+        <entry name="Roundness" type="Int">
+            <default>5</default>
+        </entry>
+        <entry name="Outline" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="Alpha" type = "Int">
+            <default>15</default>
+        </entry>
+        <entry name="DarkTheme" type = "Bool">
+            <default>false</default>
+        </entry>
+        <entry name="DisabledForMaximized" type = "Bool">
+            <default>false</default>
+        </entry>        
+        <entry name="CornersType" type="Enum">
+            <choices>
+                <choice name="RoundedCorners" />
+                <choice name="SquircledCorners" />
+            </choices>
+            <default>RoundedCorners</default>
+        </entry>
+        <entry name="SquircleRatio" type = "Int">
+            <default>50</default>
+        </entry>
+        <entry name="ShadowOffset" type = "Int">
+            <default>2</default>
+        </entry>
+    </group>
+</kcfg>

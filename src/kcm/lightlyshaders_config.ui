@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>LightlyShadersKCM</class>
+ <widget class="QWidget" name="LightlyShadersKCM">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -26,7 +26,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="roundness">
+        <widget class="QSpinBox" name="kcfg_Roundness">
          <property name="suffix">
           <string>px</string>
          </property>
@@ -35,6 +35,9 @@
          </property>
          <property name="maximum">
           <number>64</number>
+         </property>
+         <property name="value">
+          <number>6</number>
          </property>
         </widget>
        </item>
@@ -50,7 +53,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="shadowOffset">
+        <widget class="QSpinBox" name="kcfg_ShadowOffset">
          <property name="suffix">
           <string>px</string>
          </property>
@@ -60,15 +63,21 @@
          <property name="maximum">
           <number>6</number>
          </property>
+         <property name="value">
+          <number>2</number>
+         </property>
         </widget>
        </item>
       </layout>
      </item>
      <item>
-      <widget class="QCheckBox" name="outline">
+      <widget class="QCheckBox" name="kcfg_Outline">
        <property name="text">
         <string>Outline around window</string>
        </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
       </widget>
      </item>
      <item>
@@ -84,7 +93,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="alpha">
+        <widget class="QSpinBox" name="kcfg_Alpha">
          <property name="suffix">
           <string>%</string>
          </property>
@@ -112,21 +121,37 @@
       </layout>
      </item>
      <item>
-      <widget class="QCheckBox" name="darkTheme">
+      <widget class="QCheckBox" name="kcfg_DarkTheme">
        <property name="text">
         <string>Use black border (dark theme mode)</string>
        </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
       </widget>
      </item> 
      <item>
-      <widget class="QCheckBox" name="disabledForMaximized">
+      <widget class="QCheckBox" name="kcfg_DisabledForMaximized">
        <property name="text">
         <string>Disable for maximized windows</string>
        </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
       </widget>
      </item> 
      <item>
-      <widget class="QComboBox" name="cornersType">
+      <widget class="QComboBox" name="kcfg_CornersType">
+         <item>
+          <property name="text">
+           <string>Rounded</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Squircled</string>
+          </property>
+         </item>        
       </widget>
      </item> 
      <item>
@@ -137,7 +162,7 @@
       </widget>
      </item> 
      <item>
-      <widget class="QSlider" name="squircleRatio">
+      <widget class="QSlider" name="kcfg_SquircleRatio">
        <property name="minimum">
         <number>0</number>
        </property>
@@ -147,6 +172,9 @@
        <property name="pageStep">
         <number>12</number>
        </property>
+         <property name="value">
+          <number>12</number>
+         </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

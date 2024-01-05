@@ -20,7 +20,8 @@
 #ifndef LIGHTLYSHADERS_H
 #define LIGHTLYSHADERS_H
 
-#include <kwinoffscreeneffect.h>
+#include <effect/effecthandler.h>
+#include <effect/offscreeneffect.h>
 
 namespace KWin {
 
@@ -36,11 +37,11 @@ public:
     static bool supported();
     static bool enabledByDefault();
     
-    void setRoundness(const int r, EffectScreen *s);
+    void setRoundness(const int r, Output *s);
     void reconfigure(ReconfigureFlags flags) override;
-    void paintScreen(int mask, const QRegion &region, ScreenPaintData &data) override;
+    void paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const QRegion &region, Output *s) override;
     void prePaintWindow(EffectWindow* w, WindowPrePaintData& data, std::chrono::milliseconds time) override;
-    void drawWindow(EffectWindow* w, int mask, const QRegion& region, WindowPaintData& data) override;
+    void drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow* w, int mask, const QRegion& region, WindowPaintData& data) override;
     virtual int requestedEffectChainPosition() const override { return 99; }
 
     enum { RoundedCorners = 0, SquircledCorners };
@@ -66,16 +67,16 @@ private:
     {
         qreal scale=1.0;
         int sizeScaled;
-        GLTexture *maskTex;
-        GLTexture *lightOutlineTex;
-        GLTexture *darkOutlineTex;
+        std::unique_ptr<GLTexture> maskTex;
+        std::unique_ptr<GLTexture> lightOutlineTex;
+        std::unique_ptr<GLTexture> darkOutlineTex;
         QRegion *maskRegion[NTex];
     };
 
-    void genMasks(EffectScreen *s);
-    void genRect(EffectScreen *s);
+    void genMasks(Output *s);
+    void genRect(Output *s);
 
-    bool isValidWindow(EffectWindow *w, int mask=0);
+    bool isValidWindow(EffectWindow *w);
 
     void fillRegion(const QRegion &reg, const QColor &c);
     QPainterPath drawSquircle(float size, int translate);
@@ -87,7 +88,7 @@ private:
     std::unique_ptr<GLShader> m_shader;
     QSize m_corner;
 
-    QMap<EffectScreen *, LSScreenStruct> m_screens;
+    std::unordered_map<Output *, LSScreenStruct> m_screens;
     QMap<EffectWindow *, LSWindowStruct> m_windows;
 };
 
