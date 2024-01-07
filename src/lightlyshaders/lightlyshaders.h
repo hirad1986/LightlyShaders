@@ -23,6 +23,8 @@
 #include <effect/effecthandler.h>
 #include <effect/offscreeneffect.h>
 
+#include "lshelper.h"
+
 namespace KWin {
 
 class GLTexture;
@@ -52,7 +54,7 @@ protected Q_SLOTS:
     void windowMaximizedStateChanged(EffectWindow *window, bool horizontal, bool vertical);
 
 private:
-    enum { TopLeft = 0, TopRight, BottomRight, BottomLeft, NTex };
+    //enum { TopLeft = 0, TopRight, BottomRight, BottomLeft, NTex };
     enum { Top = 0, Bottom, NShad };
 
     struct LSWindowStruct
@@ -70,7 +72,6 @@ private:
         std::unique_ptr<GLTexture> maskTex;
         std::unique_ptr<GLTexture> lightOutlineTex;
         std::unique_ptr<GLTexture> darkOutlineTex;
-        QRegion *maskRegion[NTex];
     };
 
     void genMasks(Output *s);
@@ -79,9 +80,9 @@ private:
     bool isValidWindow(EffectWindow *w);
 
     void fillRegion(const QRegion &reg, const QColor &c);
-    QPainterPath drawSquircle(float size, int translate);
-    QImage genMaskImg(int size, bool mask, bool outer_rect);
     QRectF scale(const QRectF rect, qreal scaleFactor);
+
+    LSHelper *m_helper;
 
     int m_size, m_alpha, m_cornersType, m_squircleRatio, m_roundness, m_shadowOffset;
     bool m_outline, m_darkTheme, m_disabledForMaximized;

@@ -51,6 +51,7 @@ LightlyShadersKCM::save()
                                          QStringLiteral("/Effects"),
                                          QDBusConnection::sessionBus());
     interface.reconfigureEffect(QStringLiteral("kwin_effect_lightlyshaders"));
+    interface.reconfigureEffect(QStringLiteral("lightlyshaders_blur"));
 }
 
 void

@@ -27,7 +27,6 @@
 #include <QStandardPaths>
 #include <QWindow>
 #include <opengl/glutils.h>
-//#include <opengl/glplatform.h>
 #include <effect/effect.h>
 #include <core/renderviewport.h>
 #include <QMatrix4x4>
@@ -37,6 +36,13 @@
 #include <KDecoration2/Decoration>
 #include <KWindowEffects>
 
+Q_LOGGING_CATEGORY(LIGHTLYSHADERS, "kwin_effect_lightlyshaders", QtWarningMsg)
+
+static void ensureResources()
+{
+    // Must initialize resources manually because the effect is a static lib.
+    Q_INIT_RESOURCE(lightlyshaders);
+}
 
 namespace KWin {
 
@@ -47,44 +53,17 @@ KWIN_EFFECT_FACTORY_SUPPORTED_ENABLED(  LightlyShadersEffect,
 
 LightlyShadersEffect::LightlyShadersEffect() : OffscreenEffect()
 {
-    const auto screens = effects->screens();
-    for(Output *s : screens)
-    {
-        if (effects->waylandDisplay() == nullptr) {
-            s = nullptr;
-        }
-        for (int i = 0; i < NTex; ++i)
-        {
-            m_screens[s].maskRegion[i] = 0;
-        }
+    ensureResources();
 
-        if (effects->waylandDisplay() == nullptr) {
-            break;
-        }
-    }
+    m_helper = new LSHelper();
     reconfigure(ReconfigureAll);
 
-    //QString shadersDir(QStringLiteral("kwin/shaders/1.10/"));
-    //const qint64 version = Version(1, 40);
-    //if (GLPlatform::instance()->glslVersion() >= version)
-    //    shadersDir = QStringLiteral("kwin/shaders/1.40/");
+    m_shader = std::unique_ptr<GLShader>(ShaderManager::instance()->generateShaderFromFile(ShaderTrait::MapTexture, QStringLiteral(""), QStringLiteral(":/effects/lightlyshaders/shaders/lightlyshaders.frag")));
 
-    QString shadersDir(QStringLiteral("kwin/shaders/1.10/"));
-
-    const QString shader = QStandardPaths::locate(QStandardPaths::GenericDataLocation, shadersDir + QStringLiteral("lightlyshaders.frag"));
-
-    QFile file_shader(shader);
-
-    if (!file_shader.open(QFile::ReadOnly) )
-    {
-        qDebug() << "LightlyShaders: no shaders found! Exiting...";
-        deleteLater();
+    if (!m_shader) {
+        qCWarning(LIGHTLYSHADERS) << "Failed to load shader";
         return;
     }
-
-    QByteArray frag = file_shader.readAll();
-    m_shader = std::unique_ptr<GLShader>(ShaderManager::instance()->generateCustomShader(ShaderTrait::MapTexture, QByteArray(), frag));
-    file_shader.close();
 
     if (m_shader->isValid())
     {
@@ -127,17 +106,16 @@ LightlyShadersEffect::LightlyShadersEffect() : OffscreenEffect()
 
         const auto stackingOrder = effects->stackingOrder();
         for (EffectWindow *window : stackingOrder) {
-            connect(window, &EffectWindow::windowMaximizedStateChanged, this, &LightlyShadersEffect::windowMaximizedStateChanged);
             windowAdded(window);
         }
 
         connect(effects, &EffectsHandler::windowAdded, this, &LightlyShadersEffect::windowAdded);
         connect(effects, &EffectsHandler::windowDeleted, this, &LightlyShadersEffect::windowDeleted);
 
-        qDebug() << "LightlyShaders loaded.";
+        qCWarning(LIGHTLYSHADERS) << "LightlyShaders loaded.";
     }
     else
-        qDebug() << "LightlyShaders: no valid shaders found! LightlyShaders will not work.";
+        qCWarning(LIGHTLYSHADERS) << "LightlyShaders: no valid shaders found! LightlyShaders will not work.";
 }
 
 LightlyShadersEffect::~LightlyShadersEffect()
@@ -147,11 +125,6 @@ LightlyShadersEffect::~LightlyShadersEffect()
     {
         if (effects->waylandDisplay() == nullptr) {
             s = nullptr;
-        }
-        for (int i = 0; i < NTex; ++i)
-        {
-            if (m_screens[s].maskRegion[i])
-                delete m_screens[s].maskRegion[i];
         }
         if (m_screens[s].maskTex)
             //delete m_screens[s].maskTex;
@@ -196,7 +169,7 @@ LightlyShadersEffect::windowAdded(EffectWindow *w)
             || w->windowType() == NET::ComboBox
             || w->windowType() == NET::Splash)
         return;
-//    qDebug() << w->windowRole() << w->windowType() << w->windowClass();
+//    qCWarning(LIGHTLYSHADERS) << w->windowRole() << w->windowType() << w->windowClass();
     if (!w->hasDecoration() && (w->windowClass().contains("plasma", Qt::CaseInsensitive)
             || w->windowClass().contains("krunner", Qt::CaseInsensitive)
             || w->windowClass().contains("latte-dock", Qt::CaseInsensitive)
@@ -230,6 +203,8 @@ LightlyShadersEffect::windowAdded(EffectWindow *w)
     m_windows[w].isManaged = true;
     m_windows[w].skipEffect = false;
 
+    connect(w, &EffectWindow::windowMaximizedStateChanged, this, &LightlyShadersEffect::windowMaximizedStateChanged);
+
     QRectF maximized_area = effects->clientArea(MaximizeArea, w);
     if (maximized_area == w->frameGeometry() && m_disabledForMaximized)
         m_windows[w].skipEffect = true;
@@ -250,105 +225,17 @@ LightlyShadersEffect::windowMaximizedStateChanged(EffectWindow *w, bool horizont
     }
 }
 
-QPainterPath
-LightlyShadersEffect::drawSquircle(float size, int translate)
-{
-    QPainterPath squircle;
-    float squircleSize = size * 2 * (float(m_squircleRatio)/24.0 * 0.25 + 0.8); //0.8 .. 1.05
-    float squircleEdge = (size * 2) - squircleSize;
-
-    squircle.moveTo(size, 0);
-    squircle.cubicTo(QPointF(squircleSize, 0), QPointF(size * 2, squircleEdge), QPointF(size * 2, size));
-    squircle.cubicTo(QPointF(size * 2, squircleSize), QPointF(squircleSize, size * 2), QPointF(size, size * 2));
-    squircle.cubicTo(QPointF(squircleEdge, size * 2), QPointF(0, squircleSize), QPointF(0, size));
-    squircle.cubicTo(QPointF(0, squircleEdge), QPointF(squircleEdge, 0), QPointF(size, 0));
-
-    squircle.translate(translate,translate);
-
-    return squircle;
-}
-
-QImage
-LightlyShadersEffect::genMaskImg(int size, bool mask, bool outer_rect)
-{
-    QImage img(size*2, size*2, QImage::Format_ARGB32_Premultiplied);
-    img.fill(Qt::transparent);
-    QPainter p(&img);
-    QRect r(img.rect());
-    int offset_decremented;
-    if(outer_rect) {
-        offset_decremented = m_shadowOffset-1;
-    } else {
-        offset_decremented = m_shadowOffset;
-    }
-
-    if(mask) {
-        p.fillRect(img.rect(), Qt::black);
-        p.setCompositionMode(QPainter::CompositionMode_DestinationOut);
-        p.setPen(Qt::NoPen);
-        p.setBrush(Qt::black);
-        p.setRenderHint(QPainter::Antialiasing);
-        if (m_cornersType == SquircledCorners) {
-            const QPainterPath squircle1 = drawSquircle((size-m_shadowOffset), m_shadowOffset);
-            p.drawPolygon(squircle1.toFillPolygon());
-        } else {
-            p.drawEllipse(r.adjusted(m_shadowOffset,m_shadowOffset,-m_shadowOffset,-m_shadowOffset));
-        }
-    } else {
-        p.setPen(Qt::NoPen);
-        p.setRenderHint(QPainter::Antialiasing);
-        r.adjust(offset_decremented, offset_decremented, -offset_decremented, -offset_decremented);
-        if(outer_rect) {
-            p.setBrush(QColor(0, 0, 0, 255));
-        } else {
-            p.setBrush(QColor(255, 255, 255, 255));
-        }
-        if (m_cornersType == SquircledCorners) {
-            const QPainterPath squircle2 = drawSquircle((size-offset_decremented), offset_decremented);
-            p.drawPolygon(squircle2.toFillPolygon());
-        } else {
-            p.drawEllipse(r);
-        }
-        p.setCompositionMode(QPainter::CompositionMode_DestinationOut);
-        p.setBrush(Qt::black);
-        r.adjust(1, 1, -1, -1);
-        if (m_cornersType == SquircledCorners) {
-            const QPainterPath squircle3 = drawSquircle((size-(offset_decremented+1)), (offset_decremented+1));
-            p.drawPolygon(squircle3.toFillPolygon());
-        } else {
-            p.drawEllipse(r);
-        }
-    }
-    p.end();
-
-    return img;
-}
-
 void
 LightlyShadersEffect::genMasks(Output *s)
 {
-    for (int i = 0; i < NTex; ++i) {
-        if (m_screens[s].maskRegion[i])
-            delete m_screens[s].maskRegion[i];
-    }
     if (m_screens[s].maskTex)
         //delete m_screens[s].maskTex;
         m_screens[s].maskTex.reset();
 
     int size = m_screens[s].sizeScaled + m_shadowOffset;
-    QImage img = genMaskImg(size, true, false);
+    QImage img = m_helper->genMaskImg(size, true, false);
     
     m_screens[s].maskTex = GLTexture::upload(img);
-
-
-    size = m_size + m_shadowOffset;
-    img = genMaskImg(size, true, false);
-
-    m_screens[s].maskRegion[TopLeft] = new QRegion(QBitmap::fromImage(img.copy(0, 0, size, size).createMaskFromColor(QColor( Qt::black ).rgb(), Qt::MaskOutColor), Qt::DiffuseAlphaDither));
-    m_screens[s].maskRegion[TopRight] = new QRegion(QBitmap::fromImage(img.copy(size, 0, size, size).createMaskFromColor(QColor( Qt::black ).rgb(), Qt::MaskOutColor), Qt::DiffuseAlphaDither));
-    m_screens[s].maskRegion[BottomRight] = new QRegion(QBitmap::fromImage(img.copy(size, size, size, size).createMaskFromColor(QColor( Qt::black ).rgb(), Qt::MaskOutColor), Qt::DiffuseAlphaDither));
-    m_screens[s].maskRegion[BottomLeft] = new QRegion(QBitmap::fromImage(img.copy(0, size, size, size).createMaskFromColor(QColor( Qt::black ).rgb(), Qt::MaskOutColor), Qt::DiffuseAlphaDither));
-    
 }
 
 void
@@ -363,11 +250,11 @@ LightlyShadersEffect::genRect(Output *s)
 
     int size = m_screens[s].sizeScaled + m_shadowOffset;
 
-    QImage img = genMaskImg(size, false, false);
+    QImage img = m_helper->genMaskImg(size, false, false);
 
     m_screens[s].lightOutlineTex = GLTexture::upload(img);
 
-    QImage img2 = genMaskImg(size, false, true);
+    QImage img2 = m_helper->genMaskImg(size, false, true);
 
     m_screens[s].darkOutlineTex = GLTexture::upload(img2);
 }
@@ -387,24 +274,15 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
 {
     Q_UNUSED(flags)
 
-    qDebug() << "LightlyShaders reconfigure called.";
-
-    LightlyShadersConfig::self()->read();
+    LightlyShadersConfig::self()->load();
 
     m_alpha = LightlyShadersConfig::alpha();
-
     m_outline = LightlyShadersConfig::outline();
-
     m_darkTheme = LightlyShadersConfig::darkTheme();
-
     m_disabledForMaximized = LightlyShadersConfig::disabledForMaximized();
-
     m_cornersType = LightlyShadersConfig::cornersType();
-
     m_squircleRatio = LightlyShadersConfig::squircleRatio();
-
     m_shadowOffset = LightlyShadersConfig::shadowOffset();
-
     m_roundness = LightlyShadersConfig::roundness();
 
     if(m_shadowOffset>=m_roundness) {
@@ -423,6 +301,10 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
             break;
         }
     }
+
+    m_helper->reconfigure();
+
+    effects->addRepaintFull();
 }
 
 void
@@ -439,7 +321,7 @@ LightlyShadersEffect::paintScreen(const RenderTarget &renderTarget, const Render
 
     if(set_roundness) {
         setRoundness(m_roundness, s);
-        //qDebug() << "Set roundness";
+        m_helper->reconfigure();
     } 
 
     effects->paintScreen(renderTarget, viewport, mask, region, s);
@@ -460,20 +342,20 @@ LightlyShadersEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, 
     } 
 
     const QRectF geo(w->frameGeometry());
-    for (int corner = 0; corner < NTex; ++corner)
+    for (int corner = 0; corner < LSHelper::NTex; ++corner)
     {
-        QRegion reg = QRegion(scale(m_screens[s].maskRegion[corner]->boundingRect(), m_screens[s].scale).toRect());
+        QRegion reg = QRegion(scale(m_helper->m_maskRegions[corner]->boundingRect(), m_screens[s].scale).toRect());
         switch(corner) {
-            case TopLeft:
+            case LSHelper::TopLeft:
                 reg.translate(geo.x()-m_shadowOffset, geo.y()-m_shadowOffset);
                 break;
-            case TopRight:
+            case LSHelper::TopRight:
                 reg.translate(geo.x() + geo.width() - m_size, geo.y()-m_shadowOffset);
                 break;
-            case BottomRight:
+            case LSHelper::BottomRight:
                 reg.translate(geo.x() + geo.width() - m_size-1, geo.y()+geo.height()-m_size-1); 
                 break;
-            case BottomLeft:
+            case LSHelper::BottomLeft:
                 reg.translate(geo.x()-m_shadowOffset+1, geo.y()+geo.height()-m_size-1);
                 break;
             default:
@@ -482,65 +364,6 @@ LightlyShadersEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, 
         
         data.opaque -= reg;
     }
-
-    // Blur
-#if KWIN_EFFECT_API_VERSION < 236
-    QRegion blur_region;
-    bool valid = false;
-    long net_wm_blur_region = 0;
-
-    if (effects->xcbConnection()) {
-        net_wm_blur_region = effects->announceSupportProperty(QByteArrayLiteral("_KDE_NET_WM_BLUR_BEHIND_REGION"), this);
-    }
-
-    if (net_wm_blur_region != XCB_ATOM_NONE) {
-        const QByteArray value = w->readProperty(net_wm_blur_region, XCB_ATOM_CARDINAL, 32);
-        if (value.size() > 0 && !(value.size() % (4 * sizeof(uint32_t)))) {
-            const uint32_t *cardinals = reinterpret_cast<const uint32_t *>(value.constData());
-            for (unsigned int i = 0; i < value.size() / sizeof(uint32_t);) {
-                int x = cardinals[i++];
-                int y = cardinals[i++];
-                int w = cardinals[i++];
-                int h = cardinals[i++];
-                blur_region += QRect(x, y, w, h);
-            }
-        }
-        valid = !value.isNull();
-    }
-
-    if (auto internal = w->internalWindow()) {
-        const auto property = internal->property("kwin_blur");
-        if (property.isValid()) {
-            blur_region = property.value<QRegion>();
-            valid = true;
-        }
-    }
-
-    if(!blur_region.isEmpty() || w->windowClass().contains("konsole", Qt::CaseInsensitive)) {   
-        if(w->windowClass().contains("konsole", Qt::CaseInsensitive)) {
-            blur_region = QRegion(0,0,geo.width(),geo.height());    
-        }
-
-        QRegion top_left = *m_screens[s].maskRegion[TopLeft];
-        top_left.translate(0-m_shadowOffset+1, -(geo.height() - w->contentsRect().height())-m_shadowOffset+1);  
-        blur_region = blur_region.subtracted(top_left);  
-        
-        QRegion top_right = *m_screens[s].maskRegion[TopRight];
-        top_right.translate(geo.width() - m_size-1, -(geo.height() - w->contentsRect().height())-m_shadowOffset+1);   
-        blur_region = blur_region.subtracted(top_right);  
-
-        QRegion bottom_right = *m_screens[s].maskRegion[BottomRight];
-        bottom_right.translate(geo.width() - m_size-1, w->contentsRect().height()-m_size-1);    
-        blur_region = blur_region.subtracted(bottom_right);     
-        
-        QRegion bottom_left = *m_screens[s].maskRegion[BottomLeft];
-        bottom_left.translate(0-m_shadowOffset+1, w->contentsRect().height()-m_size-1);
-        blur_region = blur_region.subtracted(bottom_left);
-
-        KWindowEffects::enableBlurBehind(w->windowId(), true, blur_region);
-    }
-#endif
-    // end blur
 
     if(w->decoration() != nullptr && w->decoration()->shadow() != nullptr ) {
         const QImage shadow = w->decoration()->shadow()->shadow();
@@ -619,7 +442,7 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     sm->pushShader(m_shader.get());
 
     bool is_wayland = effects->waylandDisplay() != nullptr;
-    //qDebug() << geo_scaled.width() << geo_scaled.height();
+    //qCWarning(LIGHTLYSHADERS) << geo_scaled.width() << geo_scaled.height();
     m_shader->setUniform(frameSizeLocation, QVector2D(geo_scaled.width(), geo_scaled.height()));
     m_shader->setUniform(expandedSizeLocation, QVector2D(exp_geo_scaled.width(), exp_geo_scaled.height()));
     m_shader->setUniform(csdShadowOffsetLocation, QVector3D(geo_scaled.x() - exp_geo_scaled.x(), geo_scaled.y()-exp_geo_scaled.y(), exp_geo_scaled.height() - geo_scaled.height() - geo_scaled.y() + exp_geo_scaled.y() ));

@@ -23,6 +23,8 @@ target_link_libraries(kwin_lightlyshaders_config
     KF6::WindowSystem
     KF6::KCMUtils   
     KF6::I18n         
+
+    lshelper
 )
 
 #install(TARGETS kwin_lightlyshaders_config DESTINATION ${KDE_INSTALL_DATADIR}/kwin/effects/configs)
