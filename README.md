@@ -14,6 +14,10 @@
 
  ![default](https://github.com/a-parhom/LightlyShaders/blob/v2.0/screenshot.png)
 
+# Plasma 6:
+
+On Plasma 6 beta builds you can try experimental branch **plasma6**. It includes a fork of KWin Blur effect to fix the "korner bug" and does not need any specific window decorations. Eventually it will become the main branch and the RoundedSBE repo will be archived.
+
 # Warning:
 
 ## On Wayland corners may have "korner bug" when using blur due to the lack of [API for adjusting blur region](https://invent.kde.org/plasma/kwin/-/merge_requests/3407) on Plasma 5.27.
