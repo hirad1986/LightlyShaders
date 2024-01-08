@@ -279,6 +279,9 @@ void BlurEffect::slotWindowAdded(EffectWindow *w)
     setupDecorationConnections(w);
 
     updateBlurRegion(w);
+
+    // Check if window needs rounding corners
+    m_helper->blurWindowAdded(w);
 }
 
 void BlurEffect::slotWindowDeleted(EffectWindow *w)
@@ -291,6 +294,9 @@ void BlurEffect::slotWindowDeleted(EffectWindow *w)
         disconnect(*it);
         windowBlurChangedConnections.erase(it);
     }
+
+    // remove window
+    m_helper->blurWindowDeleted(w);
 }
 
 void BlurEffect::slotScreenRemoved(KWin::Output *screen)

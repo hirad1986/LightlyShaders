@@ -149,55 +149,12 @@ LightlyShadersEffect::windowDeleted(EffectWindow *w)
     m_windows.remove(w);
 }
 
-static bool hasShadow(EffectWindow *w)
-{
-    if(w->expandedGeometry().size() != w->frameGeometry().size())
-        return true;
-    return false;
-}
-
 void
 LightlyShadersEffect::windowAdded(EffectWindow *w)
 {
     m_windows[w].isManaged = false;
 
-    if (w->windowType() == NET::OnScreenDisplay
-            || w->windowType() == NET::Dock
-            || w->windowType() == NET::Menu
-            || w->windowType() == NET::DropdownMenu
-            || w->windowType() == NET::Tooltip
-            || w->windowType() == NET::ComboBox
-            || w->windowType() == NET::Splash)
-        return;
-//    qCWarning(LIGHTLYSHADERS) << w->windowRole() << w->windowType() << w->windowClass();
-    if (!w->hasDecoration() && (w->windowClass().contains("plasma", Qt::CaseInsensitive)
-            || w->windowClass().contains("krunner", Qt::CaseInsensitive)
-            || w->windowClass().contains("latte-dock", Qt::CaseInsensitive)
-            || w->windowClass().contains("lattedock", Qt::CaseInsensitive)
-            || w->windowClass().contains("plank", Qt::CaseInsensitive)
-            || w->windowClass().contains("cairo-dock", Qt::CaseInsensitive)
-            || w->windowClass().contains("albert", Qt::CaseInsensitive)
-            || w->windowClass().contains("ulauncher", Qt::CaseInsensitive)
-            || w->windowClass().contains("ksplash", Qt::CaseInsensitive)
-            || w->windowClass().contains("ksmserver", Qt::CaseInsensitive)
-            || (w->windowClass().contains("reaper", Qt::CaseInsensitive) && !hasShadow(w))))
-        return;
-
-    if(w->windowClass().contains("jetbrains", Qt::CaseInsensitive) && w->caption().contains(QRegularExpression ("win[0-9]+")))
-        return;
-
-    if (w->windowClass().contains("plasma", Qt::CaseInsensitive) && !w->isNormalWindow() && !w->isDialog() && !w->isModal())
-        return;
-
-    if (w->isDesktop()
-            || w->isFullScreen()
-            || w->isPopupMenu()
-            || w->isTooltip() 
-            || w->isSpecialWindow()
-            || w->isDropdownMenu()
-            || w->isPopupWindow()
-            || w->isLockScreen()
-            || w->isSplash())
+    if(!m_helper->isManagedWindow(w))
         return;
 
     m_windows[w].isManaged = true;
@@ -280,8 +237,6 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
     m_outline = LightlyShadersConfig::outline();
     m_darkTheme = LightlyShadersConfig::darkTheme();
     m_disabledForMaximized = LightlyShadersConfig::disabledForMaximized();
-    m_cornersType = LightlyShadersConfig::cornersType();
-    m_squircleRatio = LightlyShadersConfig::squircleRatio();
     m_shadowOffset = LightlyShadersConfig::shadowOffset();
     m_roundness = LightlyShadersConfig::roundness();
 
@@ -388,9 +343,6 @@ LightlyShadersEffect::isValidWindow(EffectWindow *w)
             //|| w->isMinimized()
             || !m_windows[w].isManaged
             //|| effects->hasActiveFullScreenEffect()
-            || w->isFullScreen()
-            || w->isDesktop()
-            || w->isSpecialWindow()
             || m_windows[w].skipEffect
         )
     {

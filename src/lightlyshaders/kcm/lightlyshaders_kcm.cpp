@@ -24,7 +24,7 @@ LightlyShadersKCM::LightlyShadersKCM(QObject* parent, const KPluginMetaData &dat
     ui.setupUi(widget());
     addConfig(LightlyShadersConfig::self(), widget());
 
-    if(ui.kcfg_CornersType->currentIndex() == LightlyShadersEffect::SquircledCorners) {
+    if(ui.kcfg_CornersType->currentIndex() == LSHelper::SquircledCorners) {
         ui.kcfg_SquircleRatio->setEnabled(true);
     } else {
         ui.kcfg_SquircleRatio->setEnabled(false);
@@ -65,7 +65,7 @@ void
 LightlyShadersKCM::updateChanged()
 {
 
-    if(ui.kcfg_CornersType->currentIndex() == LightlyShadersEffect::SquircledCorners) {
+    if(ui.kcfg_CornersType->currentIndex() == LSHelper::SquircledCorners) {
         ui.kcfg_SquircleRatio->setEnabled(true);
     } else {
         ui.kcfg_SquircleRatio->setEnabled(false);

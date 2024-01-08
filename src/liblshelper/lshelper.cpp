@@ -23,6 +23,8 @@ LSHelper::~LSHelper()
         if (m_maskRegions[i])
             delete m_maskRegions[i];
     }
+
+    m_managed.clear();
 }
 
 void
@@ -81,6 +83,10 @@ void
 LSHelper::roundBlurRegion(EffectWindow *w, QRegion *blur_region)
 {
     if(blur_region->isEmpty()) {
+        return;
+    }
+
+    if(!m_managed.contains(w)) {
         return;
     }
 
@@ -182,4 +188,73 @@ LSHelper::genMaskImg(int size, bool mask, bool outer_rect)
     return img;
 }
 
+bool 
+LSHelper::hasShadow(EffectWindow *w)
+{
+    if(w->expandedGeometry().size() != w->frameGeometry().size())
+        return true;
+    return false;
 }
+
+bool 
+LSHelper::isManagedWindow(EffectWindow *w)
+{
+    if (w->windowType() == NET::OnScreenDisplay
+            || w->windowType() == NET::Dock
+            || w->windowType() == NET::Menu
+            || w->windowType() == NET::DropdownMenu
+            || w->windowType() == NET::Tooltip
+            || w->windowType() == NET::ComboBox
+            || w->windowType() == NET::Splash)
+        return false;
+//    qCWarning(LIGHTLYSHADERS) << w->windowRole() << w->windowType() << w->windowClass();
+    if (!w->hasDecoration() && (w->windowClass().contains("plasma", Qt::CaseInsensitive)
+            || w->windowClass().contains("krunner", Qt::CaseInsensitive)
+            || w->windowClass().contains("latte-dock", Qt::CaseInsensitive)
+            || w->windowClass().contains("lattedock", Qt::CaseInsensitive)
+            || w->windowClass().contains("plank", Qt::CaseInsensitive)
+            || w->windowClass().contains("cairo-dock", Qt::CaseInsensitive)
+            || w->windowClass().contains("albert", Qt::CaseInsensitive)
+            || w->windowClass().contains("ulauncher", Qt::CaseInsensitive)
+            || w->windowClass().contains("ksplash", Qt::CaseInsensitive)
+            || w->windowClass().contains("ksmserver", Qt::CaseInsensitive)
+            || (w->windowClass().contains("reaper", Qt::CaseInsensitive) && !hasShadow(w))))
+        return false;
+
+    if(w->windowClass().contains("jetbrains", Qt::CaseInsensitive) && w->caption().contains(QRegularExpression ("win[0-9]+")))
+        return false;
+
+    if (w->windowClass().contains("plasma", Qt::CaseInsensitive) && !w->isNormalWindow() && !w->isDialog() && !w->isModal())
+        return false;
+
+    if (w->isDesktop()
+            || w->isFullScreen()
+            || w->isPopupMenu()
+            || w->isTooltip() 
+            || w->isSpecialWindow()
+            || w->isDropdownMenu()
+            || w->isPopupWindow()
+            || w->isLockScreen()
+            || w->isSplash())
+        return false;
+
+    return true;
+}
+
+void
+LSHelper::blurWindowAdded(EffectWindow *w)
+{
+    if(isManagedWindow(w)) {
+        m_managed.append(w);
+    }
+}
+
+void
+LSHelper::blurWindowDeleted(EffectWindow *w)
+{
+    if(m_managed.contains(w)) {
+        m_managed.removeAll(w);
+    }
+}
+
+} //namespace

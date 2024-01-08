@@ -19,6 +19,9 @@ class LIBLSHELPER_EXPORT LSHelper: public QObject
 		QPainterPath drawSquircle(float size, int translate);
     	QImage genMaskImg(int size, bool mask, bool outer_rect);
 		void roundBlurRegion(EffectWindow *w, QRegion *region);
+		bool isManagedWindow(EffectWindow *w);
+		void blurWindowAdded(EffectWindow *w);
+		void blurWindowDeleted(EffectWindow *w);
 
 		enum { RoundedCorners = 0, SquircledCorners };
 		enum { TopLeft = 0, TopRight, BottomRight, BottomLeft, NTex };
@@ -26,11 +29,13 @@ class LIBLSHELPER_EXPORT LSHelper: public QObject
 		QRegion* m_maskRegions[NTex];
 
 	private:
+		bool hasShadow(EffectWindow *w);
 		void setMaskRegions();
 		QRegion* createMaskRegion(QImage img, int size, int corner);
 
 		int m_size, m_cornersType, m_squircleRatio, m_shadowOffset;
 		bool m_disabledForMaximized;
+		QList<EffectWindow *> m_managed;
 };
 
 } //namespace

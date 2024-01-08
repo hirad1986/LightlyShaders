@@ -46,15 +46,12 @@ public:
     void drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow* w, int mask, const QRegion& region, WindowPaintData& data) override;
     virtual int requestedEffectChainPosition() const override { return 99; }
 
-    enum { RoundedCorners = 0, SquircledCorners };
-
 protected Q_SLOTS:
     void windowAdded(EffectWindow *window);
     void windowDeleted(EffectWindow *window);
     void windowMaximizedStateChanged(EffectWindow *window, bool horizontal, bool vertical);
 
 private:
-    //enum { TopLeft = 0, TopRight, BottomRight, BottomLeft, NTex };
     enum { Top = 0, Bottom, NShad };
 
     struct LSWindowStruct
@@ -84,7 +81,7 @@ private:
 
     LSHelper *m_helper;
 
-    int m_size, m_alpha, m_cornersType, m_squircleRatio, m_roundness, m_shadowOffset;
+    int m_size, m_alpha, m_roundness, m_shadowOffset;
     bool m_outline, m_darkTheme, m_disabledForMaximized;
     std::unique_ptr<GLShader> m_shader;
     QSize m_corner;
