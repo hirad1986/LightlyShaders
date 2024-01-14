@@ -66,31 +66,6 @@ LightlyShadersEffect::LightlyShadersEffect() : OffscreenEffect()
 
     if (m_shader->isValid())
     {
-        const int sampler = m_shader->uniformLocation("sampler");
-        const int expanded_size = m_shader->uniformLocation("expanded_size");
-        const int frame_size = m_shader->uniformLocation("frame_size");
-        const int csd_shadow_offset = m_shader->uniformLocation("csd_shadow_offset");
-        const int radius = m_shader->uniformLocation("radius");
-        const int shadow_sample_offset = m_shader->uniformLocation("shadow_sample_offset");
-        const int outline_strength = m_shader->uniformLocation("outline_strength");
-        const int draw_outline = m_shader->uniformLocation("draw_outline");
-        const int dark_theme = m_shader->uniformLocation("dark_theme");
-        const int squircle_ratio = m_shader->uniformLocation("squircle_ratio");
-        const int is_squircle = m_shader->uniformLocation("is_squircle");
-        ShaderManager::instance()->pushShader(m_shader.get());
-        m_shader->setUniform(is_squircle, 10);
-        m_shader->setUniform(squircle_ratio, 9);
-        m_shader->setUniform(dark_theme, 8);
-        m_shader->setUniform(draw_outline, 7);
-        m_shader->setUniform(outline_strength, 6);
-        m_shader->setUniform(shadow_sample_offset, 5);
-        m_shader->setUniform(radius, 4);
-        m_shader->setUniform(csd_shadow_offset, 3);
-        m_shader->setUniform(frame_size, 2);
-        m_shader->setUniform(expanded_size, 1);
-        m_shader->setUniform(sampler, 0);
-        ShaderManager::instance()->popShader();
-
         const auto stackingOrder = effects->stackingOrder();
         for (EffectWindow *window : stackingOrder) {
             windowAdded(window);
