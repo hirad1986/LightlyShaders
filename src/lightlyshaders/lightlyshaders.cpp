@@ -33,7 +33,6 @@
 #include <KConfigGroup>
 #include <QRegularExpression>
 #include <QBitmap>
-#include <KDecoration2/Decoration>
 #include <KWindowEffects>
 
 Q_LOGGING_CATEGORY(LIGHTLYSHADERS, "kwin_effect_lightlyshaders", QtWarningMsg)
@@ -68,39 +67,27 @@ LightlyShadersEffect::LightlyShadersEffect() : OffscreenEffect()
     if (m_shader->isValid())
     {
         const int sampler = m_shader->uniformLocation("sampler");
-        const int mask_sampler = m_shader->uniformLocation("mask_sampler");
-        const int light_outline_sampler = m_shader->uniformLocation("light_outline_sampler");
-        const int dark_outline_sampler = m_shader->uniformLocation("dark_outline_sampler");
         const int expanded_size = m_shader->uniformLocation("expanded_size");
         const int frame_size = m_shader->uniformLocation("frame_size");
         const int csd_shadow_offset = m_shader->uniformLocation("csd_shadow_offset");
         const int radius = m_shader->uniformLocation("radius");
         const int shadow_sample_offset = m_shader->uniformLocation("shadow_sample_offset");
-        const int content_size = m_shader->uniformLocation("content_size");
-        const int is_wayland = m_shader->uniformLocation("is_wayland");
-        const int has_decoration = m_shader->uniformLocation("has_decoration");
-        const int shadow_tex_size = m_shader->uniformLocation("shadow_tex_size");
         const int outline_strength = m_shader->uniformLocation("outline_strength");
         const int draw_outline = m_shader->uniformLocation("draw_outline");
         const int dark_theme = m_shader->uniformLocation("dark_theme");
-        const int scale = m_shader->uniformLocation("scale");
+        const int squircle_ratio = m_shader->uniformLocation("squircle_ratio");
+        const int is_squircle = m_shader->uniformLocation("is_squircle");
         ShaderManager::instance()->pushShader(m_shader.get());
-        m_shader->setUniform(scale, 15);
-        m_shader->setUniform(dark_theme, 14);
-        m_shader->setUniform(draw_outline, 13);
-        m_shader->setUniform(outline_strength, 12);
-        m_shader->setUniform(shadow_tex_size, 11);
-        m_shader->setUniform(has_decoration, 11);
-        m_shader->setUniform(is_wayland, 10);
-        m_shader->setUniform(content_size, 9);
-        m_shader->setUniform(shadow_sample_offset, 8);
-        m_shader->setUniform(radius, 7);
-        m_shader->setUniform(csd_shadow_offset, 6);
-        m_shader->setUniform(frame_size, 5);
-        m_shader->setUniform(expanded_size, 4);
-        m_shader->setUniform(dark_outline_sampler, 3);
-        m_shader->setUniform(light_outline_sampler, 2);
-        m_shader->setUniform(mask_sampler, 1);
+        m_shader->setUniform(is_squircle, 10);
+        m_shader->setUniform(squircle_ratio, 9);
+        m_shader->setUniform(dark_theme, 8);
+        m_shader->setUniform(draw_outline, 7);
+        m_shader->setUniform(outline_strength, 6);
+        m_shader->setUniform(shadow_sample_offset, 5);
+        m_shader->setUniform(radius, 4);
+        m_shader->setUniform(csd_shadow_offset, 3);
+        m_shader->setUniform(frame_size, 2);
+        m_shader->setUniform(expanded_size, 1);
         m_shader->setUniform(sampler, 0);
         ShaderManager::instance()->popShader();
 
@@ -120,26 +107,6 @@ LightlyShadersEffect::LightlyShadersEffect() : OffscreenEffect()
 
 LightlyShadersEffect::~LightlyShadersEffect()
 {
-    const auto screens = effects->screens();
-    for(Output *s : screens)
-    {
-        if (effects->waylandDisplay() == nullptr) {
-            s = nullptr;
-        }
-        if (m_screens[s].maskTex)
-            //delete m_screens[s].maskTex;
-            m_screens[s].maskTex.reset();
-        if (m_screens[s].lightOutlineTex)
-            //delete m_screens[s].lightOutlineTex;
-            m_screens[s].lightOutlineTex.reset();
-        if (m_screens[s].darkOutlineTex)
-            //delete m_screens[s].darkOutlineTex;
-            m_screens[s].darkOutlineTex.reset();
-        if (effects->waylandDisplay() == nullptr) {
-            break;
-        }
-    }
-
     m_windows.clear();
 }
 
@@ -183,47 +150,11 @@ LightlyShadersEffect::windowMaximizedStateChanged(EffectWindow *w, bool horizont
 }
 
 void
-LightlyShadersEffect::genMasks(Output *s)
-{
-    if (m_screens[s].maskTex)
-        //delete m_screens[s].maskTex;
-        m_screens[s].maskTex.reset();
-
-    int size = m_screens[s].sizeScaled + m_shadowOffset;
-    QImage img = m_helper->genMaskImg(size, true, false);
-    
-    m_screens[s].maskTex = GLTexture::upload(img);
-}
-
-void
-LightlyShadersEffect::genRect(Output *s)
-{
-    if (m_screens[s].lightOutlineTex)
-        //delete m_screens[s].lightOutlineTex;
-        m_screens[s].lightOutlineTex.reset();
-    if (m_screens[s].darkOutlineTex)
-        //delete m_screens[s].darkOutlineTex;
-        m_screens[s].darkOutlineTex.reset();
-
-    int size = m_screens[s].sizeScaled + m_shadowOffset;
-
-    QImage img = m_helper->genMaskImg(size, false, false);
-
-    m_screens[s].lightOutlineTex = GLTexture::upload(img);
-
-    QImage img2 = m_helper->genMaskImg(size, false, true);
-
-    m_screens[s].darkOutlineTex = GLTexture::upload(img2);
-}
-
-void
 LightlyShadersEffect::setRoundness(const int r, Output *s)
 {
     m_size = r;
     m_screens[s].sizeScaled = r*m_screens[s].scale;
     m_corner = QSize(m_size+(m_shadowOffset-1), m_size+(m_shadowOffset-1));
-    genMasks(s);
-    genRect(s);
 }
 
 void
@@ -238,7 +169,11 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
     m_darkTheme = LightlyShadersConfig::darkTheme();
     m_disabledForMaximized = LightlyShadersConfig::disabledForMaximized();
     m_shadowOffset = LightlyShadersConfig::shadowOffset();
-    m_roundness = LightlyShadersConfig::roundness();
+    m_squircleRatio = LightlyShadersConfig::squircleRatio();
+    m_cornersType = LightlyShadersConfig::cornersType();
+
+    m_helper->reconfigure();
+    m_roundness = m_helper->roundness();
 
     if(m_shadowOffset>=m_roundness) {
         m_shadowOffset = m_roundness-1;
@@ -256,8 +191,6 @@ LightlyShadersEffect::reconfigure(ReconfigureFlags flags)
             break;
         }
     }
-
-    m_helper->reconfigure();
 
     effects->addRepaintFull();
 }
@@ -320,18 +253,6 @@ LightlyShadersEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, 
         data.opaque -= reg;
     }
 
-    if(w->decoration() != nullptr && w->decoration()->shadow() != nullptr ) {
-        const QImage shadow = w->decoration()->shadow()->shadow();
-        if(shadow.width() != m_windows[w].shadowTexSize.x() || shadow.height() != m_windows[w].shadowTexSize.y()) {
-            m_windows[w].shadowTexSize.setX(shadow.width());
-            m_windows[w].shadowTexSize.setY(shadow.height());
-        }
-    }
-
-    if(!w->isDeleted() && m_windows[w].hasDecoration != (w->decoration() != nullptr)) {
-        m_windows[w].hasDecoration = w->decoration() != nullptr;
-    }
-
     effects->prePaintWindow(w, data, time);
 }
 
@@ -372,7 +293,6 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     QRectF contents_geo(w->contentsRect());
     //geo.translate(data.xTranslation(), data.yTranslation());
     const QRectF geo_scaled = scale(geo, m_screens[s].scale);
-    const QRectF contents_geo_scaled = scale(contents_geo, m_screens[s].scale);
     const QRectF exp_geo_scaled = scale(exp_geo, m_screens[s].scale);
 
     //Draw rounded corners with shadows   
@@ -382,46 +302,30 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     const int csdShadowOffsetLocation = m_shader->uniformLocation("csd_shadow_offset");
     const int radiusLocation = m_shader->uniformLocation("radius");
     const int shadowOffsetLocation = m_shader->uniformLocation("shadow_sample_offset");
-    const int contentSizeLocation = m_shader->uniformLocation("content_size");
-    const int isWaylandLocation = m_shader->uniformLocation("is_wayland");
-    const int hasDecorationLocation = m_shader->uniformLocation("has_decoration");
-    const int shadowTexSizeLocation = m_shader->uniformLocation("shadow_tex_size");
     const int outlineStrengthLocation = m_shader->uniformLocation("outline_strength");
     const int drawOutlineLocation = m_shader->uniformLocation("draw_outline");
     const int darkThemeLocation = m_shader->uniformLocation("dark_theme");
-    const int scaleLocation = m_shader->uniformLocation("scale");
+    const int squircleRatioLocation = m_shader->uniformLocation("squircle_ratio");
+    const int isSquircleLocation = m_shader->uniformLocation("is_squircle");
     ShaderManager *sm = ShaderManager::instance();
     sm->pushShader(m_shader.get());
 
-    bool is_wayland = effects->waylandDisplay() != nullptr;
     //qCWarning(LIGHTLYSHADERS) << geo_scaled.width() << geo_scaled.height();
     m_shader->setUniform(frameSizeLocation, QVector2D(geo_scaled.width(), geo_scaled.height()));
     m_shader->setUniform(expandedSizeLocation, QVector2D(exp_geo_scaled.width(), exp_geo_scaled.height()));
     m_shader->setUniform(csdShadowOffsetLocation, QVector3D(geo_scaled.x() - exp_geo_scaled.x(), geo_scaled.y()-exp_geo_scaled.y(), exp_geo_scaled.height() - geo_scaled.height() - geo_scaled.y() + exp_geo_scaled.y() ));
     m_shader->setUniform(radiusLocation, m_screens[s].sizeScaled);
     m_shader->setUniform(shadowOffsetLocation, m_shadowOffset);
-    m_shader->setUniform(contentSizeLocation, QVector2D(contents_geo_scaled.width(), contents_geo_scaled.height()));
-    m_shader->setUniform(isWaylandLocation, is_wayland);
-    //m_shader->setUniform(hasDecorationLocation, m_windows[w].hasDecoration);
-    m_shader->setUniform(hasDecorationLocation, false); // Round decorations as well (for now) 
-    m_shader->setUniform(shadowTexSizeLocation, m_windows[w].shadowTexSize);
     m_shader->setUniform(outlineStrengthLocation, float(m_alpha)/100);
     m_shader->setUniform(drawOutlineLocation, m_outline);
     m_shader->setUniform(darkThemeLocation, m_darkTheme);
-    m_shader->setUniform(scaleLocation, float(m_screens[s].scale));
-    glActiveTexture(GL_TEXTURE3);
-    m_screens[s].darkOutlineTex->bind();
-    glActiveTexture(GL_TEXTURE2);
-    m_screens[s].lightOutlineTex->bind();
-    glActiveTexture(GL_TEXTURE1);
-    m_screens[s].maskTex->bind();
+    m_shader->setUniform(squircleRatioLocation, m_squircleRatio);
+    m_shader->setUniform(isSquircleLocation, (m_cornersType == LSHelper::SquircledCorners));
+
     glActiveTexture(GL_TEXTURE0);
     
     OffscreenEffect::drawWindow(renderTarget, viewport, w, mask, region, data);
 
-    m_screens[s].maskTex->unbind();
-    m_screens[s].lightOutlineTex->unbind();
-    m_screens[s].darkOutlineTex->unbind();
     sm->popShader();
 }
 

@@ -28,7 +28,7 @@
             <default>RoundedCorners</default>
         </entry>
         <entry name="SquircleRatio" type = "Int">
-            <default>50</default>
+            <default>5</default>
         </entry>
         <entry name="ShadowOffset" type = "Int">
             <default>2</default>

@@ -4,6 +4,9 @@
 #include <QBitmap>
 #include <QPainter>
 #include <QPainterPath>
+#include <QtMath>
+
+Q_LOGGING_CATEGORY(LSHELPER, "liblshelper", QtWarningMsg)
 
 namespace KWin {
 
@@ -38,7 +41,17 @@ LSHelper::reconfigure()
     m_size = LightlyShadersConfig::roundness();
     m_disabledForMaximized = LightlyShadersConfig::disabledForMaximized();
 
+    if(m_cornersType == SquircledCorners) {
+        m_size = m_size * 0.5 * m_squircleRatio;
+    }
+
     setMaskRegions();
+}
+
+int
+LSHelper::roundness()
+{
+    return m_size;
 }
 
 void
@@ -115,21 +128,36 @@ LSHelper::roundBlurRegion(EffectWindow *w, QRegion *blur_region)
 }
 
 QPainterPath
-LSHelper::drawSquircle(float size, int translate)
+LSHelper::superellipse(float size, int n, int translate)
 {
-    QPainterPath squircle;
-    float squircleSize = size * 2 * (float(m_squircleRatio)/24.0 * 0.25 + 0.8); //0.8 .. 1.05
-    float squircleEdge = (size * 2) - squircleSize;
+    float n2 = 2.0 / n;
 
-    squircle.moveTo(size, 0);
-    squircle.cubicTo(QPointF(squircleSize, 0), QPointF(size * 2, squircleEdge), QPointF(size * 2, size));
-    squircle.cubicTo(QPointF(size * 2, squircleSize), QPointF(squircleSize, size * 2), QPointF(size, size * 2));
-    squircle.cubicTo(QPointF(squircleEdge, size * 2), QPointF(0, squircleSize), QPointF(0, size));
-    squircle.cubicTo(QPointF(0, squircleEdge), QPointF(squircleEdge, 0), QPointF(size, 0));
+    int steps = 360;
 
-    squircle.translate(translate,translate);
+    float step = (2 * M_PI) / steps;
 
-    return squircle;
+    QPainterPath path;
+    path.moveTo(2*size, size);
+
+    for (int i = 1; i < steps; ++i)
+    {
+        float t = i * step;
+
+        float cosT = qCos(t);
+        float sinT = qSin(t);
+
+        float x = size + (qPow(qAbs(cosT), n2) * size * signum(cosT));
+        float y = size - (qPow(qAbs(sinT), n2) * size * signum(sinT));
+
+        path.lineTo(x, y);
+
+        //qCWarning(LSHELPER) << "x: " << x << ", y: " << y << ", t: " << t << ", size: " << size << ", sinT: " << sinT << ", cosT: " << cosT << ", n2: " << n2;
+    }
+    path.lineTo(2*size, size);
+
+    path.translate(translate,translate);
+
+    return path;
 }
 
 QImage
@@ -153,7 +181,7 @@ LSHelper::genMaskImg(int size, bool mask, bool outer_rect)
         p.setBrush(Qt::black);
         p.setRenderHint(QPainter::Antialiasing);
         if (m_cornersType == SquircledCorners) {
-            const QPainterPath squircle1 = drawSquircle((size-m_shadowOffset), m_shadowOffset);
+            const QPainterPath squircle1 = superellipse((size-m_shadowOffset), m_squircleRatio, m_shadowOffset);
             p.drawPolygon(squircle1.toFillPolygon());
         } else {
             p.drawEllipse(r.adjusted(m_shadowOffset,m_shadowOffset,-m_shadowOffset,-m_shadowOffset));
@@ -168,8 +196,8 @@ LSHelper::genMaskImg(int size, bool mask, bool outer_rect)
             p.setBrush(QColor(255, 255, 255, 255));
         }
         if (m_cornersType == SquircledCorners) {
-            const QPainterPath squircle2 = drawSquircle((size-offset_decremented), offset_decremented);
-            p.drawPolygon(squircle2.toFillPolygon());
+            const QPainterPath squircle2 = superellipse((size-offset_decremented), m_squircleRatio, offset_decremented);
+            p.drawPolygon(squircle2.toFillPolygon());            
         } else {
             p.drawEllipse(r);
         }
@@ -177,7 +205,7 @@ LSHelper::genMaskImg(int size, bool mask, bool outer_rect)
         p.setBrush(Qt::black);
         r.adjust(1, 1, -1, -1);
         if (m_cornersType == SquircledCorners) {
-            const QPainterPath squircle3 = drawSquircle((size-(offset_decremented+1)), (offset_decremented+1));
+            const QPainterPath squircle3 = superellipse((size-(offset_decremented+1)), m_squircleRatio, (offset_decremented+1));
             p.drawPolygon(squircle3.toFillPolygon());
         } else {
             p.drawEllipse(r);

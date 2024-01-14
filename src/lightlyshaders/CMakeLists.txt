@@ -30,8 +30,6 @@ target_link_libraries(${LIGHTLYSHADERS}
     KF6::GuiAddons
     KF6::WindowSystem
 
-    KDecoration2::KDecoration
-
     lshelper
 )
 

@@ -8,11 +8,6 @@
 
 #include <KPluginFactory>
 
-/*K_PLUGIN_FACTORY_WITH_JSON(ConfigDialogFactory,
-                           "lightlyshaders_config.json",
-                           registerPlugin<LightlyShadersKCM>();)
-*/
-
 namespace KWin
 {
 

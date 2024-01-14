@@ -58,21 +58,13 @@ private:
     {
         bool skipEffect;
         bool isManaged;
-        bool hasDecoration = false;
-        QVector2D shadowTexSize = QVector2D(0,0);
     };
 
     struct LSScreenStruct
     {
         qreal scale=1.0;
         int sizeScaled;
-        std::unique_ptr<GLTexture> maskTex;
-        std::unique_ptr<GLTexture> lightOutlineTex;
-        std::unique_ptr<GLTexture> darkOutlineTex;
     };
-
-    void genMasks(Output *s);
-    void genRect(Output *s);
 
     bool isValidWindow(EffectWindow *w);
 
@@ -81,7 +73,7 @@ private:
 
     LSHelper *m_helper;
 
-    int m_size, m_alpha, m_roundness, m_shadowOffset;
+    int m_size, m_alpha, m_roundness, m_shadowOffset, m_squircleRatio, m_cornersType;
     bool m_outline, m_darkTheme, m_disabledForMaximized;
     std::unique_ptr<GLShader> m_shader;
     QSize m_corner;

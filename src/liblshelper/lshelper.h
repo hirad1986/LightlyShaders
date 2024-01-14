@@ -5,6 +5,10 @@
 #include <QImage>
 #include <QPainterPath>
 
+template <typename T> int signum(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 namespace KWin {
 
 class LIBLSHELPER_EXPORT LSHelper: public QObject
@@ -16,12 +20,13 @@ class LIBLSHELPER_EXPORT LSHelper: public QObject
 		~LSHelper();
 
 		void reconfigure();
-		QPainterPath drawSquircle(float size, int translate);
+		QPainterPath superellipse(float size, int n, int translate);
     	QImage genMaskImg(int size, bool mask, bool outer_rect);
 		void roundBlurRegion(EffectWindow *w, QRegion *region);
 		bool isManagedWindow(EffectWindow *w);
 		void blurWindowAdded(EffectWindow *w);
 		void blurWindowDeleted(EffectWindow *w);
+		int roundness();
 
 		enum { RoundedCorners = 0, SquircledCorners };
 		enum { TopLeft = 0, TopRight, BottomRight, BottomLeft, NTex };
