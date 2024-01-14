@@ -21,7 +21,7 @@
 **This is a work in progress branch!**
 It may crash, contain new bugs, require installation of additional development packages to compile or not compile for you at all!
 
-I compile it on Fedora Rawhide with Plasma 6 Beta 2 for myself. I had to download **renderbackend.h** header manually (see [related bugreport](https://bugs.kde.org/show_bug.cgi?id=479423)).
+To build on Plasma 6 RC1 you will have to download **effect/xcb.h** header manually (see [related bugreport](https://bugs.kde.org/show_bug.cgi?id=479584)).
 
 I tested this on Wayland only, so it may not compile or run on X11 for now.
 

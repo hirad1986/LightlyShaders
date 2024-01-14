@@ -13,10 +13,11 @@
 #include "core/rendertarget.h"
 #include "core/renderviewport.h"
 #include "effect/effecthandler.h"
-//#include "opengl/glplatform.h" //we want plugin be disabled by default, so no checks needed
+//#include "opengl/glplatform.h" //we want plugin to be disabled by default, so no checks needed
 #include "wayland/blur.h"
+#include "wayland/display.h"
 #include "wayland/surface.h"
-//#include "utils/xcbutils.h" //bug
+#include "utils/xcbutils.h"
 
 #include <QGuiApplication>
 #include <QMatrix4x4>
@@ -228,8 +229,7 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
                 int y = cardinals[i++];
                 int w = cardinals[i++];
                 int h = cardinals[i++];
-                //region += Xcb::fromXNative(QRect(x, y, w, h)).toRect();
-                region += QRect(x, y, w, h);
+                region += Xcb::fromXNative(QRect(x, y, w, h)).toRect();
             }
         }
         valid = !value.isNull();
