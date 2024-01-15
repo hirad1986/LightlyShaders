@@ -274,7 +274,7 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     //const int mvpMatrixLocation = m_shader->uniformLocation("modelViewProjectionMatrix");
     const int frameSizeLocation = m_shader->uniformLocation("frame_size");
     const int expandedSizeLocation = m_shader->uniformLocation("expanded_size");
-    const int csdShadowOffsetLocation = m_shader->uniformLocation("csd_shadow_offset");
+    const int shadowSizeLocation = m_shader->uniformLocation("shadow_size");
     const int radiusLocation = m_shader->uniformLocation("radius");
     const int shadowOffsetLocation = m_shader->uniformLocation("shadow_sample_offset");
     const int outlineStrengthLocation = m_shader->uniformLocation("outline_strength");
@@ -288,7 +288,7 @@ LightlyShadersEffect::drawWindow(const RenderTarget &renderTarget, const RenderV
     //qCWarning(LIGHTLYSHADERS) << geo_scaled.width() << geo_scaled.height();
     m_shader->setUniform(frameSizeLocation, QVector2D(geo_scaled.width(), geo_scaled.height()));
     m_shader->setUniform(expandedSizeLocation, QVector2D(exp_geo_scaled.width(), exp_geo_scaled.height()));
-    m_shader->setUniform(csdShadowOffsetLocation, QVector3D(geo_scaled.x() - exp_geo_scaled.x(), geo_scaled.y()-exp_geo_scaled.y(), exp_geo_scaled.height() - geo_scaled.height() - geo_scaled.y() + exp_geo_scaled.y() ));
+    m_shader->setUniform(shadowSizeLocation, QVector3D(geo_scaled.x() - exp_geo_scaled.x(), geo_scaled.y()-exp_geo_scaled.y(), exp_geo_scaled.height() - geo_scaled.height() - geo_scaled.y() + exp_geo_scaled.y() ));
     m_shader->setUniform(radiusLocation, m_screens[s].sizeScaled);
     m_shader->setUniform(shadowOffsetLocation, m_shadowOffset);
     m_shader->setUniform(outlineStrengthLocation, float(m_alpha)/100);
