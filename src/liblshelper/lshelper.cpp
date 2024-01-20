@@ -227,34 +227,6 @@ LSHelper::hasShadow(EffectWindow *w)
 bool 
 LSHelper::isManagedWindow(EffectWindow *w)
 {
-    if (w->windowType() == NET::OnScreenDisplay
-            || w->windowType() == NET::Dock
-            || w->windowType() == NET::Menu
-            || w->windowType() == NET::DropdownMenu
-            || w->windowType() == NET::Tooltip
-            || w->windowType() == NET::ComboBox
-            || w->windowType() == NET::Splash)
-        return false;
-//    qCWarning(LIGHTLYSHADERS) << w->windowRole() << w->windowType() << w->windowClass();
-    if (!w->hasDecoration() && (w->windowClass().contains("plasma", Qt::CaseInsensitive)
-            || w->windowClass().contains("krunner", Qt::CaseInsensitive)
-            || w->windowClass().contains("latte-dock", Qt::CaseInsensitive)
-            || w->windowClass().contains("lattedock", Qt::CaseInsensitive)
-            || w->windowClass().contains("plank", Qt::CaseInsensitive)
-            || w->windowClass().contains("cairo-dock", Qt::CaseInsensitive)
-            || w->windowClass().contains("albert", Qt::CaseInsensitive)
-            || w->windowClass().contains("ulauncher", Qt::CaseInsensitive)
-            || w->windowClass().contains("ksplash", Qt::CaseInsensitive)
-            || w->windowClass().contains("ksmserver", Qt::CaseInsensitive)
-            || (w->windowClass().contains("reaper", Qt::CaseInsensitive) && !hasShadow(w))))
-        return false;
-
-    if(w->windowClass().contains("jetbrains", Qt::CaseInsensitive) && w->caption().contains(QRegularExpression ("win[0-9]+")))
-        return false;
-
-    if (w->windowClass().contains("plasma", Qt::CaseInsensitive) && !w->isNormalWindow() && !w->isDialog() && !w->isModal())
-        return false;
-
     if (w->isDesktop()
             || w->isFullScreen()
             || w->isPopupMenu()
@@ -263,9 +235,44 @@ LSHelper::isManagedWindow(EffectWindow *w)
             || w->isDropdownMenu()
             || w->isPopupWindow()
             || w->isLockScreen()
-            || w->isSplash())
+            || w->isSplash()
+            || w->isOnScreenDisplay()
+            || w->isUtility()
+            || w->isDock()
+            || w->isToolbar()
+            || w->isMenu())
         return false;
 
+    //qCWarning(LSHELPER) << w->windowRole() << w->windowType() << w->windowClass();
+    if (
+            (!w->hasDecoration()
+                && (
+                    w->windowClass().contains("plasma", Qt::CaseInsensitive)
+                    || w->windowClass().contains("krunner", Qt::CaseInsensitive)
+                    || w->windowClass().contains("sddm", Qt::CaseInsensitive)
+                    || w->windowClass().contains("vmware-user", Qt::CaseInsensitive)
+                    || w->windowClass().contains("latte-dock", Qt::CaseInsensitive)
+                    || w->windowClass().contains("lattedock", Qt::CaseInsensitive)
+                    || w->windowClass().contains("plank", Qt::CaseInsensitive)
+                    || w->windowClass().contains("cairo-dock", Qt::CaseInsensitive)
+                    || w->windowClass().contains("albert", Qt::CaseInsensitive)
+                    || w->windowClass().contains("ulauncher", Qt::CaseInsensitive)
+                    || w->windowClass().contains("ksplash", Qt::CaseInsensitive)
+                    || w->windowClass().contains("ksmserver", Qt::CaseInsensitive)
+                    || (w->windowClass().contains("reaper", Qt::CaseInsensitive) && !hasShadow(w))
+                )
+            )
+            || w->windowClass().contains("xwaylandvideobridge", Qt::CaseInsensitive)
+
+        ) return false;
+
+    if(w->windowClass().contains("jetbrains", Qt::CaseInsensitive) && w->caption().contains(QRegularExpression ("win[0-9]+")))
+        return false;
+
+    if (w->windowClass().contains("plasma", Qt::CaseInsensitive) && !w->isNormalWindow() && !w->isDialog() && !w->isModal())
+        return false;
+
+    //qCWarning(LSHELPER) << w->windowClass() << w->windowClass().contains("xwaylandvideobridge", Qt::CaseInsensitive);
     return true;
 }
 
