@@ -10,11 +10,9 @@
 
  **It now also includes a fork of KWin Blur effect to fix the "korner bug".** It is disabled by default, you will have to enter Effects settings, disable the stock blur and enable the one with the "LightlyShaders" lable.
 
- This effect works correctly with stock Plasma effects:
+ This effect works correctly with stock Plasma effects.
 
- ![gif](https://github.com/a-parhom/LightlyShaders/blob/v2.0/lightly_shaders_2.0.gif)
-
- ![default](https://github.com/a-parhom/LightlyShaders/blob/v2.0/screenshot.png)
+ ![default](https://github.com/a-parhom/LightlyShaders/blob/plasma6/screenshot.png)
 
 # Warning:
 
@@ -25,7 +23,7 @@ To build on Plasma 6 RC1 you will have to download **effect/xcb.h** header manua
 
 I tested this on Wayland only, so it may not compile or run on X11 for now.
 
-This branch is expected to work with any window decoration and theme (though some adjustments may be necessary, like disabling window borders and stock outline in Breeze).
+This branch is expected to work with any window decoration and theme.
 
 # Dependencies:
  
