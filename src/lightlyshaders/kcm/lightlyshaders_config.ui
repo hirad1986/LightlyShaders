@@ -21,7 +21,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Radius:</string>
+          <string>Corner size (radius):</string>
          </property>
         </widget>
        </item>
@@ -70,16 +70,26 @@
        </item>
       </layout>
      </item>
+
      <item>
-      <widget class="QCheckBox" name="kcfg_Outline">
+      <widget class="QCheckBox" name="kcfg_InnerOutline">
        <property name="text">
-        <string>Outline around window</string>
+        <string>Draw inner outline</string>
        </property>
          <property name="checked">
           <bool>true</bool>
          </property>
       </widget>
      </item>
+
+     <item row="4" column="7">
+      <widget class="KColorButton" name="kcfg_InnerOutlineColor">
+        <property name="alphaChannelEnabled">
+         <bool>true</bool>
+        </property>
+      </widget>
+     </item>
+
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="topMargin">
@@ -88,48 +98,73 @@
        <item>
         <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Outline strength:</string>
+          <string>Inner outline width:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="kcfg_Alpha">
+        <widget class="QSpinBox" name="kcfg_InnerOutlineWidth">
          <property name="suffix">
-          <string>%</string>
+          <string>px</string>
          </property>
          <property name="minimum">
           <number>1</number>
          </property>
          <property name="maximum">
-          <number>100</number>
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+
+     <item>
+      <widget class="QCheckBox" name="kcfg_OuterOutline">
+       <property name="text">
+        <string>Draw outer outline</string>
+       </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+      </widget>
+     </item> 
+
+     <item row="4" column="7">
+      <widget class="KColorButton" name="kcfg_OuterOutlineColor">
+        <property name="alphaChannelEnabled">
+         <bool>true</bool>
+        </property>
+      </widget>
+     </item>
+
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="topMargin">
+        <number>7</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Outer outline width:</string>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+        <widget class="QSpinBox" name="kcfg_OuterOutlineWidth">
+         <property name="suffix">
+          <string>px</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
+         <property name="minimum">
+          <number>1</number>
          </property>
-        </spacer>
+         <property name="maximum">
+          <number>10</number>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
-     <item>
-      <widget class="QCheckBox" name="kcfg_DarkTheme">
-       <property name="text">
-        <string>Use black border (dark theme mode)</string>
-       </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-      </widget>
-     </item> 
+
      <item>
       <widget class="QCheckBox" name="kcfg_DisabledForMaximized">
        <property name="text">

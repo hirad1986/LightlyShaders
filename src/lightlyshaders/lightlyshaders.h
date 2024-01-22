@@ -63,7 +63,7 @@ private:
     struct LSScreenStruct
     {
         qreal scale=1.0;
-        int sizeScaled;
+        float sizeScaled;
     };
 
     bool isValidWindow(EffectWindow *w);
@@ -73,8 +73,9 @@ private:
 
     LSHelper *m_helper;
 
-    int m_size, m_alpha, m_roundness, m_shadowOffset, m_squircleRatio, m_cornersType;
-    bool m_outline, m_darkTheme, m_disabledForMaximized;
+    int m_size, m_innerOutlineWidth, m_outerOutlineWidth, m_roundness, m_shadowOffset, m_squircleRatio, m_cornersType;
+    bool m_innerOutline, m_outerOutline, m_darkTheme, m_disabledForMaximized;
+    QColor m_innerOutlineColor, m_outerOutlineColor;
     std::unique_ptr<GLShader> m_shader;
     QSize m_corner;
 
