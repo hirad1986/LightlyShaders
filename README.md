@@ -16,7 +16,7 @@
 
 # Plasma 6:
 
-On Plasma 6 beta builds you can try experimental branch **plasma6**. It includes a fork of KWin Blur effect to fix the "korner bug" and does not need any specific window decorations. Eventually it will become the main branch and the RoundedSBE repo will be archived.
+On Plasma 6 beta builds you can try experimental branch **plasma6**. It includes a fork of KWin Blur effect to fix the "korner bug" and does not need any specific window decorations. The settings for outline width and color were added. Eventually it will become the main branch and the RoundedSBE repo will be archived.
 
 # Warning:
 
