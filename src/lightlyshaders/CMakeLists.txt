@@ -34,5 +34,4 @@ target_link_libraries(${LIGHTLYSHADERS}
 )
 
 
-#install(TARGETS ${LIGHTLYSHADERS} DESTINATION ${KDE_INSTALL_PLUGINDIR}/kwin/effects/plugins)
-install(TARGETS ${LIGHTLYSHADERS} DESTINATION /usr/lib64/qt6/plugins/kwin/effects/plugins)
+install(TARGETS ${LIGHTLYSHADERS} DESTINATION ${KDE_INSTALL_PLUGINDIR}/kwin/effects/plugins)

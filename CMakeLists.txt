@@ -4,8 +4,9 @@ project(lightlyshaders)
 set(PROJECT_VERSION "3.0.0")
 set(PROJECT_VERSION_MAJOR 0)
 
+set(KF_MIN_VERSION "5.240.0")
 set(QT_MIN_VERSION "6.6.0")
-set(KF6_MIN_VERSION "5.240.0")
+set(QT_MAJOR_VERSION 6)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -38,7 +39,7 @@ find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 include_directories(${Qt6Widgets_INCLUDE_DIRS} ${Qt6Network_INCLUDE_DIRS} ${Qt6OpenGL_INCLUDE_DIRS} ${Qt6Xml_INCLUDE_DIRS})
 add_definitions(${Qt6Widgets_DEFINITIONS})
 
-find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
+find_package(KF6 ${KF_MIN_VERSION} REQUIRED COMPONENTS
     Config
     ConfigWidgets
     CoreAddons

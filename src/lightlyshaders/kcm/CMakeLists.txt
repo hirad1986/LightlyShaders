@@ -27,7 +27,5 @@ target_link_libraries(kwin_lightlyshaders_config
     lshelper
 )
 
-#install(TARGETS kwin_lightlyshaders_config DESTINATION ${KDE_INSTALL_DATADIR}/kwin/effects/configs)
-
-install(TARGETS kwin_lightlyshaders_config DESTINATION /usr/lib64/qt6/plugins/kwin/effects/configs)
+install(TARGETS kwin_lightlyshaders_config DESTINATION ${KDE_INSTALL_PLUGINDIR}/kwin/effects/configs)
 
