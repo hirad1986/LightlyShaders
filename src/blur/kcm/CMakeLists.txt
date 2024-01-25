@@ -13,4 +13,4 @@ target_link_libraries(kwin_lightlyshaders_blur_config
     Qt6::DBus
 )
 
-install(TARGETS kwin_lightlyshaders_blur_config DESTINATION /usr/lib64/qt6/plugins/kwin/effects/configs)
+install(TARGETS kwin_lightlyshaders_blur_config DESTINATION ${KDE_INSTALL_PLUGINDIR}/kwin/effects/configs)
