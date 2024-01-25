@@ -5,37 +5,35 @@
     - [Ukrainian army](https://bank.gov.ua/en/about/support-the-armed-forces)
     - [Humanitarian aid to Ukraine](https://bank.gov.ua/en/about/humanitarian-aid-to-ukraine)
 
-# LightlyShaders v2.1
+# LightlyShaders v2.2
  This is a fork of Luwx's [LightlyShaders](https://github.com/Luwx/LightlyShaders), which in turn is a fork of [ShapeCorners](https://sourceforge.net/projects/shapecorners/).  
 
- It works correctly with stock Plasma effects:
+ It works correctly with stock Plasma effects.
 
- ![gif](https://github.com/a-parhom/LightlyShaders/blob/v2.0/lightly_shaders_2.0.gif)
+ ![default](https://github.com/a-parhom/LightlyShaders/blob/master/screenshot.png)
 
- ![default](https://github.com/a-parhom/LightlyShaders/blob/v2.0/screenshot.png)
+# Changelog:
+  - Includes a fork of KWin Blur effect to fix the "korner bug" on X11 and Wayland
+  - The settings for outline width and color were added
+  - Works with any window decorations
+    - Shadow offset parameter can solve issues with window decorations outlines
+  - Window shaping does not use additional textures and is done entirely in shader, which potentially improves performance
 
 # Plasma 6:
+On Plasma 6 Beta and RC builds you can try experimental branch **plasma6**. Eventually it will become the main branch.
 
-On Plasma 6 beta builds you can try experimental branch **plasma6**. It includes a fork of KWin Blur effect to fix the "korner bug" and does not need any specific window decorations. The settings for outline width and color were added. Eventually it will become the main branch and the RoundedSBE repo will be archived.
-
-# Warning:
-
-## On Wayland corners may have "korner bug" when using blur due to the lack of [API for adjusting blur region](https://invent.kde.org/plasma/kwin/-/merge_requests/3407) on Plasma 5.27.
-
-## This version heavily relies on window decorations, that correctly work with Plasma 5.25 "korner bug" fix!
-Currently I can confirm this effect correctly works with **SierraBreezeEnhanced** or default **Breeze** (though Breeze has hardcoded corner radius). You have to make sure, that your radius settings in window decorations match with settings in LightlyShaders.  
-
-## Alternatively you can try my new project: [RoundedSBE](https://github.com/a-parhom/RoundedSBE)
-This is a fork of **SierraBreezeEnhanced** window decoration with a built-in corner-rounding effect **CornersShader** - a simplified version of LightlyShaders, integrated with RoundedSBE's configuration. It is in it's early stage, may have bugs and/or missing features.
-
+# Notes:
+  - After some updates of Plasma this plugin may need to be recompiled in order to work with changes introduced to KWin.
+  - This version includes a patched KWin Blur effect, that shapes blur region using the lshelper library that also comes bundled with this plugin. To build it in Plasma 5.27.10, some KWin headers were included and an installer script introduced, which makes a symlink to libkwin.so.5. This is needed, because KWin development packages for Plasma 5.27 does not include that (which is not the case in Plasma 6).
+  - You will need to install qt5, kf5, kwin and xcb development packages. Instructions below come mostly from previous version and most likely do not include each required package. Unfortunately, I'm not able to figure out the dependency packages for each linux distro, so pull requests are welcome here.
 
 # Dependencies:
  
-Plasma >= 5.27 (5.27.1 to fix issue #87).
+Plasma >= 5.27.10.
  
 Debian based (Ubuntu, Kubuntu, KDE Neon):
 ```
-sudo apt install git cmake g++ gettext extra-cmake-modules qttools5-dev libqt5x11extras5-dev libkf5configwidgets-dev libkf5crash-dev libkf5globalaccel-dev libkf5kio-dev libkf5notifications-dev kinit-dev kwin-dev 
+sudo apt install git cmake g++ gettext extra-cmake-modules qttools5-dev libqt5x11extras5-dev libkf5*-dev libxcb*-dev kinit-dev kwin-dev 
 ```
 Fedora based
 ```
@@ -50,15 +48,18 @@ OpenSUSE based
 sudo zypper install git cmake gcc-c++ extra-cmake-modules libqt5-qttools-devel libqt5-qtx11extras-devel kconfigwidgets-devel kcrash-devel kguiaddons-devel kglobalaccel-devel kio-devel ki18n-devel knotifications-devel kinit-devel kwin5-devel libQt5Gui-devel libQt5OpenGL-devel libepoxy-devel
 ```
 
-# Manual installation
+# Installation
 ```
 git clone https://github.com/a-parhom/LightlyShaders
 
 cd LightlyShaders;
 
-mkdir qt5build; cd qt5build; cmake ../ -DCMAKE_INSTALL_PREFIX=/usr && make && sudo make install && (kwin_x11 --replace &)
+chmod +x install.sh
+sudo ./install.sh
 ```
 
-## Note
-After some updates of Plasma this plugin may need to be recompiled in order to work with changes introduced to KWin.
- 
+# Uninstall
+```
+chmod +x uninstall.sh
+sudo ./uninstall.sh
+```

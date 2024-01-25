@@ -1,14 +1,22 @@
 cmake_minimum_required(VERSION 3.16.0)
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(LIGHTLYSHADERS kwin4_effect_lightlyshaders)
 
 project(${LIGHTLYSHADERS})
+set(PROJECT_VERSION "2.2.0")
+set(PROJECT_VERSION_MAJOR 0)
 
-set(QT_MIN_VERSION "5.4.0")
-set(KF5_MIN_VERSION "5.9.0")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose Release or Debug" FORCE)
+endif()
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DQT_NO_DEBUG_OUTPUT")
+
+set(QT_MIN_VERSION "5.15.2")
+set(KF5_MIN_VERSION "5.102.0")
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
@@ -27,6 +35,7 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 include_directories(${Qt5Widgets_INCLUDE_DIRS} ${Qt5X11Extras_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS} ${Qt5OpenGL_INCLUDE_DIRS} ${Qt5Xml_INCLUDE_DIRS})
 add_definitions(${Qt5Widgets_DEFINITIONS})
 
+include(FeatureSummary)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(KDECompilerSettings)
@@ -83,65 +92,12 @@ if (NOT EFFECTS_H OR NOT KWIN_GLUTILS OR NOT KWIN_EFFECTS OR NOT OPENGL)
     message(FATAL_ERROR "cant continue")
 endif (NOT EFFECTS_H OR NOT KWIN_GLUTILS OR NOT KWIN_EFFECTS OR NOT OPENGL)
 
-add_library(${LIGHTLYSHADERS} MODULE lightlyshaders.cpp)
-
-target_link_libraries(${LIGHTLYSHADERS}
-    PUBLIC
-        Qt5::Core
-        Qt5::Gui
-        Qt5::DBus
-        ${KWIN_EFFECTS}
-        ${KWIN_GLUTILS}
-        epoxy
-        GL
-    PRIVATE
-        KF5::ConfigCore
-        KF5::CoreAddons
-        KF5::ConfigWidgets
-        KF5::GuiAddons
-        KF5::WindowSystem
-        KDecoration2::KDecoration
-        )
-
-if (XCB_FOUND)
-    target_link_libraries(${LIGHTLYSHADERS} PUBLIC Qt5::X11Extras XCB::XCB)
-else (XCB_FOUND)
-    if (X11_FOUND)
-        target_link_libraries(${LIGHTLYSHADERS} PUBLIC ${X11_X11_LIB} ${X11_LIBRARIES})
-    endif (X11_FOUND)
-endif (XCB_FOUND)
-
-#kcoreaddons_desktop_to_json(${LIGHTLYSHADERS} lightlyshaders.desktop)
-
-install(TARGETS ${LIGHTLYSHADERS} DESTINATION ${MODULEPATH}/kwin/effects/plugins)
-# execute_process(COMMAND kf5-config --install services OUTPUT_VARIABLE SERVICEPATH OUTPUT_STRIP_TRAILING_WHITESPACE)
-#install(FILES lightlyshaders.desktop DESTINATION ${SERVICEPATH}/kwin)
-
-execute_process(COMMAND kf5-config --install data OUTPUT_VARIABLE DATAPATH OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-install(FILES shaders_110/lightlyshaders.frag DESTINATION ${DATAPATH}/kwin/shaders/1.10)
-install(FILES shaders_140/lightlyshaders.frag DESTINATION ${DATAPATH}/kwin/shaders/1.40)
-
-#config
 function(kwin_add_effect_config name)
     list(REMOVE_ITEM ARGV ${name})
     kcoreaddons_add_plugin(${name} INSTALL_NAMESPACE "kwin/effects/configs" SOURCES ${ARGV})
 endfunction()
 
-project(kwin4_lightlyshaders_config)
-set(kwin4_lightlyshaders_config_SOURCES lightlyshaders_config.cpp)
-ki18n_wrap_ui(kwin4_lightlyshaders_config_SOURCES lightlyshaders_config.ui)
-qt5_add_dbus_interface(kwin4_lightlyshaders_config_SOURCES org.kde.kwin.Effects.xml kwineffects_interface)
-kwin_add_effect_config(kwin4_lightlyshaders_config ${kwin4_lightlyshaders_config_SOURCES})
-target_link_libraries(kwin4_lightlyshaders_config
-        PUBLIC
-            kwineffects
-            Qt5::Widgets
-        PRIVATE
-            KF5::ConfigWidgets
-            KF5::WindowSystem
-            KF5::I18n
-            KF5::GlobalAccel
-        )
+add_subdirectory(src)
 
+feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
