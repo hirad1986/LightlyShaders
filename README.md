@@ -6,14 +6,16 @@
     - [Humanitarian aid to Ukraine](https://bank.gov.ua/en/about/humanitarian-aid-to-ukraine)
 
 # LightlyShaders v2.2
+ Round window corners and outline effect for KWin.
+ 
  This is a fork of Luwx's [LightlyShaders](https://github.com/Luwx/LightlyShaders), which in turn is a fork of [ShapeCorners](https://sourceforge.net/projects/shapecorners/).  
 
- It works correctly with stock Plasma effects.
+ It deals with infamous "korner bug" and works correctly with stock Plasma effects (except WindowHeap-based effects, which is a [bug](https://bugs.kde.org/show_bug.cgi?id=457442) in KWin).
 
  ![default](https://github.com/a-parhom/LightlyShaders/blob/master/screenshot.png)
 
 # Changelog:
-  - Includes a fork of KWin Blur effect to fix the "korner bug" on X11 and Wayland
+  - Includes a fork of KWin Blur effect to fix the "korner bug" on X11 and Wayland (should be enabled manually instead of the default Blur effect)
   - The settings for outline width and color were added
   - Works with any window decorations
     - Shadow offset parameter can solve issues with window decorations outlines
