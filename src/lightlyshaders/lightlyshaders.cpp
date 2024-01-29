@@ -101,7 +101,10 @@ LightlyShadersEffect::windowAdded(EffectWindow *w)
     m_windows[w].isManaged = true;
     m_windows[w].skipEffect = false;
 
-    connect(effects, &EffectsHandler::windowMaximizedStateChanged, this, &LightlyShadersEffect::windowMaximizedStateChanged);
+    connect(effects, &EffectsHandler::windowMaximizedStateChanged,
+            this, &LightlyShadersEffect::windowMaximizedStateChanged);
+    connect(effects, &EffectsHandler::windowFullScreenChanged,
+            this, &LightlyShadersEffect::windowFullScreenChanged);
 
     QRectF maximized_area = effects->clientArea(MaximizeArea, w);
     if (maximized_area == w->frameGeometry() && m_disabledForMaximized)
@@ -109,6 +112,16 @@ LightlyShadersEffect::windowAdded(EffectWindow *w)
     
     redirect(w);
     setShader(w, m_shader.get());
+}
+
+void 
+LightlyShadersEffect::windowFullScreenChanged(EffectWindow *w)
+{
+    if(w->isFullScreen()) {
+        m_windows[w].isManaged = false;
+    } else {
+        m_windows[w].isManaged = true;
+    }
 }
 
 void 
