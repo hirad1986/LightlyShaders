@@ -1,5 +1,6 @@
 #!/bin/sh
 
+echo "Uninstalling LightlyShaders..."
 ORIGINAL_DIR=$(pwd)
 
 cd build
