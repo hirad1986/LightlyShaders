@@ -1,5 +1,7 @@
 #!/bin/sh
 
+sudo updatedb
+
 LIBKWIN_PATH=$(locate libkwin.so.5 | grep '\/libkwin.so.5$')
 LIBKWIN_DIR="$(dirname "${LIBKWIN_PATH}")"
 
