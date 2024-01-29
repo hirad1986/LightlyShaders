@@ -32,7 +32,10 @@ struct BlurRenderData
 struct BlurEffectData
 {
     /// The region that should be blurred behind the window
-    QRegion region;
+    std::optional<QRegion> content;
+
+    /// The region that should be blurred behind the frame
+    std::optional<QRegion> frame;
 
     /// The render data per screen. Screens can have different color spaces.
     std::unordered_map<Output *, BlurRenderData> render;
@@ -80,9 +83,10 @@ private:
     bool decorationSupportsBlurBehind(const EffectWindow *w) const;
     bool shouldBlur(const EffectWindow *w, int mask, const WindowPaintData &data) const;
     void updateBlurRegion(EffectWindow *w);
-    void blur(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data);
-    GLTexture *ensureNoiseTexture();
 
+    void blur(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data);
+
+    GLTexture *ensureNoiseTexture();
 
 private:
     LSHelper *m_helper;

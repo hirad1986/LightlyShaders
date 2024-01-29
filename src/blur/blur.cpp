@@ -217,11 +217,12 @@ void BlurEffect::reconfigure(ReconfigureFlags flags)
 
 void BlurEffect::updateBlurRegion(EffectWindow *w)
 {
-    QRegion region;
-    bool valid = false;
+    std::optional<QRegion> content;
+    std::optional<QRegion> frame;
 
     if (net_wm_blur_region != XCB_ATOM_NONE) {
         const QByteArray value = w->readProperty(net_wm_blur_region, XCB_ATOM_CARDINAL, 32);
+        QRegion region;
         if (value.size() > 0 && !(value.size() % (4 * sizeof(uint32_t)))) {
             const uint32_t *cardinals = reinterpret_cast<const uint32_t *>(value.constData());
             for (unsigned int i = 0; i < value.size() / sizeof(uint32_t);) {
@@ -232,26 +233,32 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
                 region += Xcb::fromXNative(QRect(x, y, w, h)).toRect();
             }
         }
-        valid = !value.isNull();
+        if (!value.isNull()) {
+            content = region;
+        }
     }
 
     SurfaceInterface *surf = w->surface();
 
     if (surf && surf->blur()) {
-        region = surf->blur()->region();
-        valid = true;
+        content = surf->blur()->region();
     }
 
     if (auto internal = w->internalWindow()) {
         const auto property = internal->property("kwin_blur");
         if (property.isValid()) {
-            region = property.value<QRegion>();
-            valid = true;
+            content = property.value<QRegion>();
         }
     }
 
-    if (valid) {
-        m_windows[w].region = region;
+    if (w->decorationHasAlpha() && decorationSupportsBlurBehind(w)) {
+        frame = decorationBlurRegion(w);
+    }
+
+    if (content.has_value() || frame.has_value()) {
+        BlurEffectData &data = m_windows[w];
+        data.content = content;
+        data.frame = frame;
     } else {
         if (auto it = m_windows.find(w); it != m_windows.end()) {
             effects->makeOpenGLContextCurrent();
@@ -388,25 +395,26 @@ QRegion BlurEffect::blurRegion(EffectWindow *w) const
     QRegion region;
 
     if (auto it = m_windows.find(w); it != m_windows.end()) {
-        const QRegion &appRegion = it->second.region;
-        if (!appRegion.isEmpty()) {
-            if (w->decorationHasAlpha() && decorationSupportsBlurBehind(w)) {
-                region = decorationBlurRegion(w);
+        const std::optional<QRegion> &content = it->second.content;
+        const std::optional<QRegion> &frame = it->second.frame;
+        if (content.has_value()) {
+            if (content->isEmpty()) {
+                // An empty region means that the blur effect should be enabled
+                // for the whole window.
+                region = w->rect().toRect();
+            } else {
+                if (frame.has_value()) {
+                    region = frame.value();
+                }
+                region += content->translated(w->contentsRect().topLeft().toPoint()) & w->decorationInnerRect().toRect();
             }
-            region |= appRegion.translated(w->contentsRect().topLeft().toPoint()) & w->decorationInnerRect().toRect();
-        } else {
-            // An empty region means that the blur effect should be enabled
-            // for the whole window.
-            region = w->rect().toRect();
+        } else if (frame.has_value()) {
+            region = frame.value();
         }
-    } else if (w->decorationHasAlpha() && decorationSupportsBlurBehind(w)) {
-        // If the client hasn't specified a blur region, we'll only enable
-        // the effect behind the decoration.
-        region = decorationBlurRegion(w);
-    }
 
-    //Apply LighlyShaders to blur region
-    m_helper->roundBlurRegion(w, &region);
+        //Apply LighlyShaders to blur region
+        m_helper->roundBlurRegion(w, &region);
+    }
 
     return region;
 }
@@ -431,7 +439,7 @@ void BlurEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::
         // to blur an area partially we have to shrink the opaque area of a window
         QRegion newOpaque;
         for (const QRect &rect : data.opaque) {
-            newOpaque |= rect.adjusted(m_expandSize, m_expandSize, -m_expandSize, -m_expandSize);
+            newOpaque += rect.adjusted(m_expandSize, m_expandSize, -m_expandSize, -m_expandSize);
         }
         data.opaque = newOpaque;
 
@@ -442,7 +450,7 @@ void BlurEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::
     // if we have to paint a non-opaque part of this window that intersects with the
     // currently blurred region we have to redraw the whole region
     if ((data.paint - oldOpaque).intersects(m_currentBlur)) {
-        data.paint |= m_currentBlur;
+        data.paint += m_currentBlur;
     }
 
     // in case this window has regions to be blurred
@@ -451,18 +459,18 @@ void BlurEffect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::
     // if this window or a window underneath the blurred area is painted again we have to
     // blur everything
     if (m_paintedArea.intersects(blurArea) || data.paint.intersects(blurArea)) {
-        data.paint |= blurArea;
+        data.paint += blurArea;
         // we have to check again whether we do not damage a blurred area
         // of a window
         if (blurArea.intersects(m_currentBlur)) {
-            data.paint |= m_currentBlur;
+            data.paint += m_currentBlur;
         }
     }
 
-    m_currentBlur |= blurArea;
+    m_currentBlur += blurArea;
 
     m_paintedArea -= data.opaque;
-    m_paintedArea |= data.paint;
+    m_paintedArea += data.paint;
 }
 
 bool BlurEffect::shouldBlur(const EffectWindow *w, int mask, const WindowPaintData &data) const
@@ -552,7 +560,7 @@ void BlurEffect::blur(const RenderTarget &renderTarget, const RenderViewport &vi
                                   pt.y() + (r.y() - pt.y()) * data.yScale() + data.yTranslation());
             const QPoint bottomRight(std::floor(topLeft.x() + r.width() * data.xScale()) - 1,
                                      std::floor(topLeft.y() + r.height() * data.yScale()) - 1);
-            scaledShape |= QRect(QPoint(std::floor(topLeft.x()), std::floor(topLeft.y())), bottomRight);
+            scaledShape += QRect(QPoint(std::floor(topLeft.x()), std::floor(topLeft.y())), bottomRight);
         }
         blurShape = scaledShape;
     } else if (data.xTranslation() || data.yTranslation()) {
@@ -561,7 +569,7 @@ void BlurEffect::blur(const RenderTarget &renderTarget, const RenderViewport &vi
             const QRectF t = QRectF(r).translated(data.xTranslation(), data.yTranslation());
             const QPoint topLeft(std::ceil(t.x()), std::ceil(t.y()));
             const QPoint bottomRight(std::floor(t.x() + t.width() - 1), std::floor(t.y() + t.height() - 1));
-            translated |= QRect(topLeft, bottomRight);
+            translated += QRect(topLeft, bottomRight);
         }
         blurShape = translated;
     }
