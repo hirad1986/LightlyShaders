@@ -50,6 +50,7 @@ protected Q_SLOTS:
     void windowAdded(EffectWindow *window);
     void windowDeleted(EffectWindow *window);
     void windowMaximizedStateChanged(EffectWindow *window, bool horizontal, bool vertical);
+    void windowFullScreenChanged(EffectWindow *window);
 
 private:
     enum { Top = 0, Bottom, NShad };
