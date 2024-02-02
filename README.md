@@ -51,6 +51,7 @@ sudo zypper install git cmake gcc-c++ extra-cmake-modules libqt5-qttools-devel l
 ```
 
 # Installation
+## Via script
 ```
 git clone https://github.com/a-parhom/LightlyShaders
 
@@ -58,6 +59,14 @@ cd LightlyShaders;
 
 chmod +x install.sh
 sudo ./install.sh
+```
+## Manually
+If the script doesn't work for you, you can find libkwin.so.5 file manually and make a symlink named libkwin.so to it in the same directory (or in the directory, where `ld` looks for libraries to link with). After that you can build and install like in previous versions:
+```
+mkdir build; cd build
+cmake ../ -DCMAKE_INSTALL_PREFIX=/usr
+make -j$(nproc)
+sudo make install
 ```
 
 # Uninstall
