@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16.0)
 set(LIGHTLYSHADERS kwin4_effect_lightlyshaders)
 
 project(${LIGHTLYSHADERS})
-set(PROJECT_VERSION "2.2.0")
+set(PROJECT_VERSION "2.2.1")
 set(PROJECT_VERSION_MAJOR 0)
 
 set(CMAKE_CXX_STANDARD 20)
