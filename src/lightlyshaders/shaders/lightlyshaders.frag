@@ -27,11 +27,12 @@ varying vec2 texcoord0;
 float squircleBounds(vec2 p, vec2 center, float clip_radius)
 {
     vec2 delta = abs(p - center);
+    float f_squircle_ratio = float(squircle_ratio);
 
-    float pow_dx = pow(delta.x, squircle_ratio);
-    float pow_dy = pow(delta.y, squircle_ratio);
+    float pow_dx = pow(delta.x, f_squircle_ratio);
+    float pow_dy = pow(delta.y, f_squircle_ratio);
 
-    float dist = pow(pow_dx + pow_dy, 1.0 / squircle_ratio);
+    float dist = pow(pow_dx + pow_dy, 1.0 / f_squircle_ratio);
 
     return clamp(clip_radius - dist + 0.5, 0.0, 1.0);
 }
@@ -99,20 +100,20 @@ vec4 cornerOutline(vec4 outColor, bool inner, vec2 coord0, float radius, vec2 ce
 
     if(inner) {
         outline_color = inner_outline_color;
-        radius_delta_outer = 0;
+        radius_delta_outer = 0.0;
         radius_delta_inner = -outline_width;
 
         if(invert) {
-            radius_delta_inner = 0;
+            radius_delta_inner = 0.0;
             radius_delta_outer = outline_width;
         }
     } else {
         outline_color = outer_outline_color;
-        radius_delta_inner = 0;
+        radius_delta_inner = 0.0;
         radius_delta_outer = outline_width;
 
         if(invert) {
-            radius_delta_outer = 0;
+            radius_delta_outer = 0.0;
             radius_delta_inner = -outline_width;
         }
     }
